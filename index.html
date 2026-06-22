@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mural Digital — Sala dos Professores</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&family=Crimson+Pro:ital@1&display=swap');
+
+  :root{
+    --bg-0:#0b0e10; --bg-1:#11161a; --panel:#161c20;
+    --amber:#ffb347; --amber-dim:#7a5a26;
+    --green:#7ddc8c; --green-dim:#3a5a3f;
+    --grey-line:#2a3338; --text-soft:#aab4ba; --text-bright:#f2efe6; --red:#e2614f;
+    --gold:#e8c468; --blue-cnn:#cc0000; --blue-otempo:#0056b3;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;width:100%;}
+  body{
+    background: var(--bg-0);
+    background-image: radial-gradient(circle at 50% -10%, rgba(255,179,71,.05), transparent 55%);
+    color: var(--text-bright); font-family:'Inter',sans-serif;
+    height:100vh; width:100vw; overflow:hidden;
+  }
+
+  .shell{ display:flex; flex-direction:column; height:100vh; width:100vw; padding: 1.8vh 2vw; }
+
+  /* ===== TOPBAR ===== */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    border-bottom: 1px solid var(--grey-line); padding-bottom: 1.2vh; margin-bottom:1.6vh; flex-shrink:0;
+    position: relative; z-index: 10;
+  }
+  .brand{ display:flex; align-items:center; gap:1vw; }
+  .brand .dot{
+    width:.9vw; height:.9vw; border-radius:50%; background: var(--green);
+    box-shadow: 0 0 10px var(--green); animation: pulse 2.4s infinite ease-in-out; flex-shrink:0;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  .brand h1{ font-family:'Archivo Black',sans-serif; font-size: 2.4vh; margin:0; color: var(--text-bright); }
+  .brand .sub{ font-size:1.3vh; color: var(--text-soft); letter-spacing:2px; text-transform:uppercase; margin-top:2px;}
+
+  .topbar-right{ display:flex; align-items:center; gap:2vw; }
+  .weather-mini{ display:flex; align-items:center; gap:.6vw; }
+  .weather-mini .ico{ font-size:3.5vh; }
+  .weather-mini .temp{ font-family:'Space Mono',monospace; font-size:2.8vh; font-weight:700; color: var(--text-bright); }
+  .weather-mini .loc{ font-size:1.1vh; color: var(--text-soft); text-transform:uppercase; letter-spacing:1px; }
+
+  .clock-date{ text-align:right; }
+  .clock{
+    font-family:'Space Mono',monospace; font-weight:700; font-size: 4.5vh; color: var(--amber);
+    letter-spacing:1px; line-height:1; text-shadow: 0 0 18px rgba(255,179,71,.35);
+  }
+  .clock .secs{ color: var(--amber-dim); font-size:2.4vh; }
+  .date-line{ font-size:1.5vh; color: var(--text-soft); margin-top:.3vh; text-transform:capitalize; }
+
+  /* ===== STAGE DO CARROSSEL ===== */
+  .stage{ flex:1; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; }
+  .screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition: opacity .6s ease-in-out;
+  }
+  .screen.active{ opacity:1; pointer-events:auto; }
+
+  .screen-dots{ position:absolute; bottom:.4vh; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:15;}
+  .screen-dots span{ width:9px; height:9px; border-radius:50%; background: var(--grey-line); transition: all .3s; }
+  .screen-dots span.active{ background: var(--amber); transform: scale(1.4); }
+
+  /* ===== TELA 1: GRADE COMPLETA DE TODAS AS RESERVAS ===== */
+  .grid-card{ width: 96vw; max-width:1850px; height: 76vh; display:flex; flex-direction:column; }
+  .grid-card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2vh; }
+  .grid-card-title{ font-family:'Archivo Black',sans-serif; font-size:3.5vh; color: var(--text-bright); }
+  .grid-card-title .hl{ color: var(--amber); }
+  .grid-card-day{ font-size:2vh; color: var(--text-soft); text-transform:capitalize; }
+
+  .turnos-wrap{ flex:1; display:flex; flex-direction:column; gap:2vh; min-height:0; }
+  .turno-section{ flex:1; display:flex; flex-direction:column; min-height:0; }
+  .turno-section-head{
+    font-size:1.6vh; letter-spacing:2.5px; text-transform:uppercase; color: var(--amber);
+    display:flex; align-items:center; gap:10px; margin-bottom:.6vh; flex-shrink:0; font-weight:bold;
+  }
+  .turno-section-head::after{ content:""; flex:1; height:1px; background: var(--amber-dim); opacity:.4;}
+
+  /* 6 Colunas: Horário + Informática + Tela Interativa + Sala de Vídeo + Tablets + Biblioteca */
+  .ptable { flex:1; display:grid; grid-template-columns: 6.5vw repeat(5, 1fr); grid-template-rows: auto repeat(5, 1fr); gap:.5vh .5vw; min-height:0; }
+  .ptable .head-cell{
+    font-size:1.5vh; font-weight:800; color: var(--text-soft); text-transform:uppercase; letter-spacing:.5px;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:.4vh 2px; background: rgba(255,255,255,0.02); border-radius:4px;
+  }
+  .ptable .period-cell{
+    font-family:'Space Mono',monospace; font-weight:700; color: var(--amber); font-size:2vh;
+    display:flex; align-items:center; justify-content:center; background: rgba(255,179,71,.1); border-radius:6px; text-align:center; line-height:1.2;
+  }
+  .ptable .cell{
+    background: var(--bg-1); border:1.5px solid var(--grey-line); border-radius:8px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    padding:.4vh .4vw; min-height:0; overflow:hidden; transition: background .3s;
+  }
+  .ptable .cell.live{ border-color: var(--amber); background: linear-gradient(180deg, rgba(255,179,71,0.15), var(--bg-1)); box-shadow: 0 0 5px rgba(255,179,71,.3) inset; }
+  .ptable .cell .prof{ font-size:2.1vh; font-weight:800; color: #ffffff; line-height:1.2; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ptable .cell .prof.vazio{ color: var(--text-soft); font-style:italic; font-weight:500; font-size:1.7vh; opacity: 0.4; }
+  .ptable .cell .tagnow{ font-size:1vh; color: var(--green); margin-top:.2vh; letter-spacing:.5px; text-transform:uppercase; font-weight:900; background: rgba(125,220,140,0.15); padding: 1px 4px; border-radius:4px;}
+
+  /* ===== TELAS 2 E 3: ABAS FIXAS DE JORNAIS (TEXTO EXPLICADO) ===== */
+  .news-card-clean {
+    width: 88vw; max-width: 1350px; height: 65vh;
+    background: var(--panel); border: 1px solid var(--grey-line);
+    border-left: 16px solid var(--news-color, var(--amber)); border-radius: 16px;
+    padding: 6vh 5vw; display: flex; flex-direction: column; justify-content: center; gap: 3vh;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.35);
+  }
+  .news-card-clean.cnn { --news-color: var(--blue-cnn); }
+  .news-card-clean.otempo { --news-color: var(--blue-otempo); }
+
+  .news-brand-badge { display: flex; align-items: center; gap: 1vw; }
+  .news-brand-badge .badge-tag {
+    color: #fff; font-family: 'Archivo Black', sans-serif; font-size: 2.2vh; padding: 0.6vh 1.6vh; border-radius: 5px; letter-spacing: 1px;
+  }
+  .news-brand-badge .badge-tag.cnn { background: var(--blue-cnn); }
+  .news-brand-badge .badge-tag.otempo { background: var(--blue-otempo); }
+  .news-brand-badge .badge-label { font-size: 1.8vh; color: var(--text-soft); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+  
+  .news-main-headline { font-family: 'Archivo Black', sans-serif; font-size: 4.6vh; line-height: 1.3; color: #fff; }
+  .news-main-desc { font-size: 2.6vh; color: var(--text-soft); line-height: 1.6; font-weight: 400; }
+  .news-loading-fs { font-size: 2.5vh; color: var(--text-soft); text-align: center; width: 100%; }
+
+  /* ===== TELA 4: COMUNICADOS ADMINISTRATIVOS COLETIVOS ===== */
+  .board-wrap{ width:90vw; max-width:1400px; height:74vh; display:flex; flex-direction:column; }
+  .board-head{ display:flex; align-items:center; gap:1vw; margin-bottom:2vh; flex-shrink:0; }
+  .board-head .ico{ font-size:3vh; }
+  .board-head .title{ font-family:'Archivo Black',sans-serif; font-size:2.8vh; color: var(--text-bright); }
+  .board-grid{ flex:1; display:grid; grid-template-columns: repeat(auto-fit, minmax(28vw, 1fr)); gap:2vh 2vw; overflow:hidden; align-content:start; }
+
+  .aviso-card-msg{ background: var(--panel); border:1px solid var(--grey-line); border-radius:16px; padding:2.5vh 2vw; display:flex; flex-direction:column; gap:1.5vh; }
+  .aviso-card-msg img{ width:100%; max-height:22vh; object-fit:cover; border-radius:10px; }
+  .aviso-card-msg .texto{ font-size:2.4vh; color: var(--text-bright); font-weight:600; line-height:1.4; }
+
+  .aviso-card-conv{ background: linear-gradient(180deg, rgba(226,97,79,.18), var(--panel) 65%); border:2px solid var(--red); border-radius:16px; padding:2.5vh 2vw; }
+  .aviso-card-conv .label{ font-size:1.5vh; letter-spacing:2px; text-transform:uppercase; color: var(--red); font-weight:800; margin-bottom:.8vh;}
+  .aviso-card-conv .prof{ font-family:'Archivo Black',sans-serif; font-size:3.2vh; color: var(--text-bright); margin-bottom:.6vh;}
+  .aviso-card-conv .sala{ font-size:1.8vh; color: var(--text-bright); }
+  .aviso-card-conv .sala b{ color: var(--red); font-size:2.4vh; display:block; margin-top:.4vh;}
+
+  .board-empty{ flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1.4vh; color: var(--text-soft); font-size:2.4vh; }
+  .board-empty .big{ font-size:6vh; }
+
+  /* ===== TELA EXTRA: EXIBIÇÃO EM DESTAQUE INDIVIDUAL ===== */
+  .aviso-card-indiv{ width:78vw; max-width:1100px; text-align:center; }
+  .aviso-msg-indiv{ background: var(--panel); border:1px solid var(--grey-line); border-radius:22px; padding:5vh 5vw; }
+  .aviso-msg-indiv img{ max-width:100%; max-height:36vh; border-radius:12px; margin-bottom:2vh; object-fit:contain; }
+  .aviso-msg-indiv .texto{ font-size:3.8vh; color: var(--text-bright); font-weight:600; line-height:1.4; }
+
+  /* ===== PAINEL DE CONTROLE INTEGRADO (EMBUTIDO E OCULTO) ===== */
+  #admin-panel {
+    position: fixed; bottom: 10px; right: 10px; z-index: 9999;
+    background: #1c2327; border: 2px solid var(--grey-line); padding: 15px; border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: sans-serif; width: 320px;
+    display: none;
+  }
+  #admin-panel h3 { margin: 0 0 10px 0; font-size: 16px; color: var(--amber); display:flex; justify-content:space-between; }
+  #admin-panel input, #admin-panel textarea, #admin-panel select, #admin-panel button {
+    width: 100%; margin-bottom: 8px; padding: 8px; background: #11161a; border: 1px solid var(--grey-line);
+    color: #fff; border-radius: 6px; font-size: 13px;
+  }
+  #admin-panel button { background: var(--amber); color: #000; font-weight: bold; cursor: pointer; border: none; }
+  #admin-panel button:hover { opacity: 0.9; }
+  .trigger-hint { position: fixed; bottom: 5px; right: 5px; font-size: 10px; color: rgba(255,255,255,0.1); cursor: pointer; user-select: none; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        <h1>Mural Digital Informativo</h1>
+        <div class="sub">Agendamentos &amp; Notícias em Tempo Real</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="weather-mini">
+        <span class="ico" id="w-icon">⛅</span>
+        <div>
+          <div class="temp" id="w-temp">--°C</div>
+          <div class="loc">Belo Horizonte</div>
+        </div>
+      </div>
+      <div class="clock-date">
+        <div class="clock" id="clock">--:--<span class="secs">:--</span></div>
+        <div class="date-line" id="date-line">carregando data...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="screen-dots" id="screen-dots"></div>
+  </div>
+
+</div>
+
+<div class="trigger-hint" onclick="toggleAdmin()">• Admin</div>
+<div id="admin-panel">
+  <h3>Controle de Avisos <span style="cursor:pointer;color:var(--red)" onclick="toggleAdmin()">✕</span></h3>
+  <select id="adm-type" onchange="document.getElementById('form-convocao').style.display = this.value === 'convocacao' ? 'block' : 'none'">
+    <option value="texto">Comunicado Geral (Texto/Imagem)</option>
+    <option value="convocacao">Convocação de Professor</option>
+  </select>
+  
+  <div id="form-comunicado">
+    <textarea id="adm-text" placeholder="Texto do comunicado importante..."></textarea>
+    <input type="text" id="adm-img" placeholder="URL da Imagem (opcional)">
+  </div>
+  
+  <div id="form-convocao" style="display:none;">
+    <input type="text" id="adm-prof" placeholder="Nome do Professor">
+    <input type="text" id="adm-sala" placeholder="Local / Sala">
+  </div>
+
+  <input type="number" id="adm-tempo" placeholder="Duração ativo (minutos) - Padrão: 60" value="60">
+  <button onclick="enviarAviso()">Publicar no Mural</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, onSnapshot, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Credenciais oficiais do seu Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyCi62yDjL4ayE3JoCP-m8dDpyEb1jIiZis",
+  authDomain: "agendamento-escolar-86843.firebaseapp.com",
+  projectId: "agendamento-escolar-86843",
+  storageBucket: "agendamento-escolar-86843.firebasestorage.app",
+  messagingSenderId: "339474137748",
+  appId: "1:339474137748:web:94412cb05e597f7e9cea81"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const reservasCol = collection(db, "reservas");
+const avisosCol = collection(db, "avisos");
+
+// Lista de recursos mapeados conforme o banco de dados
+const RESOURCES = [
+  {id:'informatica', label:'Informática', icon:'💻'},
+  {id:'tela', label:'Tela Interativa', icon:'🖥️'},
+  {id:'video', label:'Sala Vídeo', icon:'🎬'},
+  {id:'tablets', label:'Tablets', icon:'📱'},
+  {id:'biblioteca', label:'Biblioteca', icon:'📚'},
+];
+
+const DAY_NAMES = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const TIME_TABLE = {
+  'Manhã': [
+    {periodo:1, start:'07:00', end:'07:50'}, {periodo:2, start:'07:50', end:'08:40'},
+    {periodo:3, start:'08:40', end:'09:30'}, {periodo:4, start:'09:50', end:'10:40'},
+    {periodo:5, start:'10:40', end:'11:30'},
+  ],
+  'Tarde': [
+    {periodo:1, start:'13:00', end:'13:50'}, {periodo:2, start:'13:50', end:'14:40'},
+    {periodo:3, start:'14:40', end:'15:30'}, {periodo:4, start:'15:50', end:'16:40'},
+    {periodo:5, start:'16:40', end:'17:30'},
+  ]
+};
+
+let reservations = {};
+let avisos = {};
+let cnnEducacaoItems = [];
+let oTempoItems = [];
+
+function pad(n){ return n.toString().padStart(2,'0'); }
+function timeToMinutes(t){ const [h,m] = t.split(':').map(Number); return h*60+m; }
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+
+/* RELÓGIO */
+function updateClock(){
+  const now = new Date();
+  document.getElementById('clock').innerHTML = `${pad(now.getHours())}:${pad(now.getMinutes())}<span class="secs">:${pad(now.getSeconds())}</span>`;
+  document.getElementById('date-line').textContent = now.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function classifySlot(turno, periodo, now){
+  const slot = TIME_TABLE[turno]?.find(s=>s.periodo===periodo);
+  if(!slot) return 'done';
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const start = timeToMinutes(slot.start), end = timeToMinutes(slot.end);
+  if(nowMin >= start && nowMin < end) return 'now';
+  if(nowMin < start) return 'next';
+  return 'done';
+}
+
+function buildAvisoSlides(){
+  const now = Date.now();
+  return Object.values(avisos).filter(a => !a.expiresAt || a.expiresAt > now);
+}
+
+/* RENDERIZADOR 1: GRADE DE RECURSOS COMPLETA */
+function renderGridScreen(){
+  const now = new Date();
+  const todayName = DAY_NAMES[now.getDay()];
+
+  if(todayName === 'Domingo' || todayName === 'Sábado'){
+    return `<div class="grid-card"><div class="board-empty"><span class="big">🌤️</span>Não há reservas registradas para o final de semana.</div></div>`;
+  }
+
+  let turnosHtml = '';
+  ['Manhã','Tarde'].forEach(turno=>{
+    let cellsHtml = `<div class="head-cell">Horário</div>`;
+    RESOURCES.forEach(r => {
+      cellsHtml += `<div class="head-cell">${r.icon}<br>${r.label}</div>`;
+    });
+
+    TIME_TABLE[turno].forEach(slot=>{
+      cellsHtml += `<div class="period-cell">${slot.periodo}º Hor.<br><small style="font-size:1.2vh; opacity:0.8;">${slot.start}</small></div>`;
+      
+      RESOURCES.forEach(rec => {
+        const key = `${rec.id}__${todayName}__${turno}__${slot.periodo}`;
+        const res = reservations[key];
+        const state = classifySlot(turno, slot.periodo, now);
+        
+        let inner = res ? `<span class="prof">${escapeHtml(res.professor)}</span>${state==='now' ? '<span class="tagnow">Agora</span>' : ''}` : `<span class="prof vazio">Livre</span>`;
+        
+        cellsHtml += `<div class="cell ${state==='now' && res ? 'live':''}">${inner}</div>`;
+      });
+    });
+
+    turnosHtml += `<div class="turno-section">
+      <div class="turno-section-head">${turno}</div>
+      <div class="ptable">${cellsHtml}</div>
+    </div>`;
+  });
+
+  return `<div class="grid-card">
+    <div class="grid-card-head">
+      <div class="grid-card-title">Grade Geral de <span class="hl">Agendamentos</span></div>
+      <div class="grid-card-day">${todayName}-feira</div>
+    </div>
+    <div class="turnos-wrap">${turnosHtml}</div>
+  </div>`;
+}
+
+/* RENDERIZADOR 2: ABAS DE JORNAIS */
+function renderFullscreenNews(item, provider) {
+  if (!item) {
+    return `
+      <div class="news-card-clean ${provider}">
+        <div class="news-brand-badge">
+          <span class="badge-tag ${provider}">${provider === 'cnn' ? 'CNN BRASIL' : 'O TEMPO'}</span>
+        </div>
+        <div class="news-loading-fs">🔄 Atualizando informações via Feed RSS...</div>
+      </div>`;
+  }
+  return `
+    <div class="news-card-clean ${provider}">
+      <div class="news-brand-badge">
+        <span class="badge-tag ${provider}">${provider==='cnn'?'CNN BRASIL':'O TEMPO'}</span>
+        <span class="badge-label">${provider==='cnn'?'Educação & Aprendizado':'Portal O Tempo / Gerais'}</span>
+      </div>
+      <div class="news-main-headline">${escapeHtml(item.title)}</div>
+      <div class="news-main-desc">${escapeHtml(item.description)}</div>
+    </div>
+  `;
+}
+
+/* RENDERIZADOR 3: COMUNICADOS COLETIVOS */
+function renderAvisosScreen(){
+  const ativos = buildAvisoSlides();
+  if(ativos.length === 0){
+    return `<div class="board-wrap"><div class="board-empty"><span class="big">📋</span>Nenhum recado administrativo importante para hoje.</div></div>`;
+  }
+  return `<div class="board-wrap">
+    <div class="board-head"><span class="ico">📣</span><span class="title">Informações Importantes do Dia</span></div>
+    <div class="board-grid">${ativos.map(a => {
+      if(a.type === 'convocacao'){
+        return `<div class="aviso-card-conv">
+          <div class="label">📢 Convocação Urgente</div>
+          <div class="prof">${escapeHtml(a.professor)}</div>
+          <div class="sala">Favor comparecer à: <b>${escapeHtml(a.sala)}</b></div>
+        </div>`;
+      }
+      return `<div class="aviso-card-msg">
+        ${a.imageUrl ? `<img src="${a.imageUrl}">` : ''}
+        ${a.text ? `<div class="texto">${escapeHtml(a.text)}</div>` : ''}
+      </div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+/* RENDERIZADOR 4: DESTAQUES INDIVIDUAIS */
+function renderAvisoIndividualScreen(aviso){
+  return `<div class="aviso-card-indiv"><div class="aviso-msg-indiv">
+    ${aviso.imageUrl ? `<img src="${aviso.imageUrl}">` : ''}
+    ${aviso.text ? `<div class="texto">${escapeHtml(aviso.text)}</div>` : ''}
+  </div></div>`;
+}
+
+/* GERENCIADOR DE TRANSIÇÃO DO CARROSSEL (24 SEGUNDOS PARA LEITURA CONFORTÁVEL) */
+let queue = [];
+let queueIndex = 0;
+let cnnIndex = 0;
+let oTempoIndex = 0;
+
+function rebuildQueue(){
+  const ativos = buildAvisoSlides();
+  queue = [];
+
+  // Tela 1: Grade unificada de agendamentos
+  queue.push({type:'grid', provider: null, data:null});
+
+  // Tela 2: CNN Educação
+  const cnnItem = cnnEducacaoItems.length > 0 ? cnnEducacaoItems[cnnIndex % cnnEducacaoItems.length] : null;
+  queue.push({type:'news', provider: 'cnn', data: cnnItem});
+
+  // Tela 3: Jornal O Tempo
+  const oTempoItem = oTempoItems.length > 0 ? oTempoItems[oTempoIndex % oTempoItems.length] : null;
+  queue.push({type:'news', provider: 'otempo', data: oTempoItem});
+
+  // Tela 4: Quadro Administrativo + Detalhes Individuais
+  if(ativos.length > 0){
+    queue.push({type:'board', provider: null, data:null});
+    ativos.filter(x => x.type !== 'convocacao').forEach(a => queue.push({type:'individual', provider: null, data:a}));
+  }
+
+  if(queueIndex >= queue.length) queueIndex = 0;
+}
+
+function renderCurrentScreen(){
+  const stage = document.getElementById('stage');
+  if(queue.length === 0) rebuildQueue();
+  const current = queue[queueIndex];
+  if(!current) return;
+
+  let html = '';
+  if(current.type === 'grid') html = renderGridScreen();
+  else if(current.type === 'news') html = renderFullscreenNews(current.data, current.provider);
+  else if(current.type === 'board') html = renderAvisosScreen();
+  else if(current.type === 'individual') html = renderAvisoIndividualScreen(current.data);
+
+  stage.innerHTML = `<div class="screen active">${html}</div><div class="screen-dots" id="screen-dots"></div>`;
+  
+  const dotsEl = document.getElementById('screen-dots');
+  if(dotsEl) dotsEl.innerHTML = queue.map((_,i)=>`<span class="${i===queueIndex?'active':''}"></span>`).join('');
+}
+
+function advanceScreen(){
+  rebuildQueue();
+  if(queue[queueIndex]) {
+    if(queue[queueIndex].provider === 'cnn') cnnIndex++;
+    if(queue[queueIndex].provider === 'otempo') oTempoIndex++;
+  }
+  queueIndex = (queueIndex + 1) % Math.max(queue.length, 1);
+  renderCurrentScreen();
+}
+
+/* ESCUTA SINCRO DO FIREBASE */
+onSnapshot(reservasCol, (snap)=>{ reservations = {}; snap.forEach(d=>{ reservations[d.id] = d.data(); }); rebuildQueue(); renderCurrentScreen(); });
+onSnapshot(avisosCol, (snap)=>{ avisos = {}; snap.forEach(d=>{ avisos[d.id] = d.data(); }); rebuildQueue(); renderCurrentScreen(); });
+
+rebuildQueue();
+renderCurrentScreen();
+setInterval(advanceScreen, 24000); // 24 segundos fixos para dar tempo de leitura total da tabela e notícias
+
+/* FEEDS DE NOTÍCIAS ASSÍNCRONOS */
+async function loadCnnEducacao(){
+  try{
+    const feedUrl = encodeURIComponent('https://www.cnnbrasil.com.br/tudo-sobre/educacao/feed/');
+    const resp = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${feedUrl}`);
+    const data = await resp.json();
+    if(data?.items?.length){
+      cnnEducacaoItems = data.items.slice(0, 5).map(it => ({
+        title: it.title,
+        description: (it.description || '').replace(/<[^>]+>/g,'').trim().slice(0, 350) + '...'
+      }));
+      rebuildQueue();
+    }
+  }catch(e){ console.error(e); }
+}
+
+async function loadOTempo(){
+  try{
+    const feedUrl = encodeURIComponent('https://www.otempo.com.br/rss/ultimas-noticias');
+    const resp = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${feedUrl}`);
+    const data = await resp.json();
+    if(data?.items?.length){
+      oTempoItems = data.items.slice(0, 5).map(it => ({
+        title: it.title,
+        description: (it.description || '').replace(/<[^>]+>/g,'').trim().slice(0, 350) + '...'
+      }));
+      rebuildQueue();
+    }
+  }catch(e){ console.error(e); }
+}
+
+loadCnnEducacao(); loadOTempo();
+setInterval(()=>{ loadCnnEducacao(); loadOTempo(); }, 15*60*1000);
+
+/* SISTEMA CLIMÁTICO DE BELO HORIZONTE */
+async function loadWeather(){
+  try{
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=-19.9167&longitude=-43.9345&current=temperature_2m,weather_code&timezone=America%2FSao_Paulo`;
+    const resp = await fetch(url); const data = await resp.json();
+    const map = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌦️',61:'🌧️',65:'⛈️' };
+    document.getElementById('w-icon').textContent = map[data.current.weather_code] || '⛅';
+    document.getElementById('w-temp').textContent = `${Math.round(data.current.temperature_2m)}°C`;
+  }catch(e){ console.error(e); }
+}
+loadWeather(); setInterval(loadWeather, 15*60*1000);
+
+/* FUNÇÕES DO PAINEL ADMINISTRATIVO ACOPLADO */
+window.toggleAdmin = function() {
+  const p = document.getElementById('admin-panel');
+  p.style.display = p.style.display === 'block' ? 'none' : 'block';
+};
+
+window.enviarAviso = async function() {
+  const type = document.getElementById('adm-type').value;
+  const minutos = parseInt(document.getElementById('adm-tempo').value) || 60;
+  const expiresAt = Date.now() + (minutos * 60 * 1000);
+  const id = "aviso_" + Date.now();
+
+  let payload = { id, type, expiresAt, ts: Date.now() };
+
+  if(type === 'convocacao') {
+    payload.professor = document.getElementById('adm-prof').value;
+    payload.sala = document.getElementById('adm-sala').value;
+    if(!payload.professor || !payload.sala) return alert('Preencha os dados da convocação!');
+  } else {
+    payload.text = document.getElementById('adm-text').value;
+    payload.imageUrl = document.getElementById('adm-img').value;
+    if(!payload.text && !payload.imageUrl) return alert('Escreva uma mensagem ou adicione um link de imagem!');
+  }
+
+  try {
+    await setDoc(doc(db, "avisos", id), payload);
+    alert('Publicado com sucesso no Mural!');
+    document.getElementById('adm-text').value = '';
+    document.getElementById('adm-img').value = '';
+    document.getElementById('adm-prof').value = '';
+    document.getElementById('adm-sala').value = '';
+    toggleAdmin();
+  } catch(e) { alert('Erro ao salvar no Firebase: ' + e.message); }
+};
+</script>
+</body>
+</html>
